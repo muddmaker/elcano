@@ -5,6 +5,9 @@
 #include <SD.h>
 #include <Elcano_Serial.h>
 
+SerialData dt;
+ParseState ps;
+
 /*  
 Elcano Module C4: Path Planner.
 
