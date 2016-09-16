@@ -1070,8 +1070,14 @@ void loop()
     get a reset, we can start from where we left off.   
     */
  //   Serial.println("Loop");
-    if (DataAvailable)
+	int r = ps.update();
+    if (r == 1)
     {
+		if (dt.kind == MSG_GOAL) {
+			
+		} else {
+			dt.write(&Serial2);
+		}
         // read vehicle position from C6
         readline(0);
         // send data to C3
@@ -1092,14 +1098,6 @@ void loop()
         // send data to C3
         SendPath(Path, MAX_WAYPOINTS);
         Serial.println();     
-    }
-    else
-    {  // delay for 1 sec, waiting for data
-        long end_time = millis() + 1000;
-        while (millis() < end_time)
-        {
-            if (DataAvailable) break;
-        }
     }
 }
 
