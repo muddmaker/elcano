@@ -13,13 +13,24 @@ namespace elcano {
 
 const int END           = 0x04000;
 const int GOAL          = 0x02000;
+const int CONES         = 5;
 const int MAX_DISTANCE  = 0x3ffffff;
 const int MAX_MAPS      = 10;
 const int MAX_JUNCTIONS = 30;
 
 struct Waypoint {
-	float latitude;
-	float longitude;
+	int index;
+	long latitude;
+	long longitude;
+	unsigned long time_ms;
+	long speed_mmPs;
+	long east_mm;
+	long north_mm;
+	int east_x1k;
+	int north_x1k;
+	long sigma_mm;
+	
+	void write_as_SerialData(HardwareSerial *);
 };
 
 struct Junction {

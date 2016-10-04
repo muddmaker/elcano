@@ -1,4 +1,5 @@
 #include <WaypointReader.h>
+#include <Elcano_Serial.h>
 #include <SD.h>
 
 /*
@@ -270,6 +271,19 @@ void JunctionReader::dump_error_string(int r, HardwareSerial *dev) {
 		default: dev->println("\tunknown");
 		}
 	}
+}
+
+void Waypoint::write_as_SerialData(int32_t i, HardwareSerial *dev) {
+	static SerialData dt;
+	dt.clear();
+	float angle    = atan2(north_x1k, east_x1k) * 180 / PI;
+	dt.kind        = MsgType::seg;
+	dt.number      = i;
+	dt.posE_cm     = east_mm    / 10;
+	dt.posN_cm     = north_mm   / 10;
+	dt.speed_cmPs  = speed_mmPs / 10;
+	dt.bearing_deg = (long)(-angle) + 90;
+	dt.write(dev);
 }
 
 } // namespace elcano
