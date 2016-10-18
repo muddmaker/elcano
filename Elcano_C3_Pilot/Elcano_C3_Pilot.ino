@@ -4,6 +4,9 @@
 #include <Elcano_Serial.h>
 #include <SPI.h>
 
+elcano::ParseState ps;
+elcano::SerialData dt;
+
 /*
 // Elcano Contol Module C3: Pilot.
 
@@ -52,65 +55,19 @@ struct Point
  * This is done for loose coupling. If we need to change the point data stored 
  * locally, we don't need to try to change the elcano serial file.
  */
-bool ProcessTargetLocation(TargetLocation *currentTargetLocation, SerialData instructions)
+bool ProcessTargetLocation(TargetLocation *currentTargetLocation, const SerialData &instructions)
 {
   // Each statement checks that the data received is not int_max.
-  if(instructions.speed_cmPs == 2147483648)
-  {
-    return false;
-  }
-  else if(instructions.posE_cm == 2147483648)
-  {
-    return false;
-  }
-  else if(instructions.posN_cm == 2147483648)
-  {
-    return false;
-  }
-  else if(instructions.bearing_deg == 2147483648)
-  {
-    return false;
-  }
+  if (instructions.speed_cmPs   == elcano::NaN
+	|| instructions.posE_cm     == elcano::NaN
+	|| instructions.posN_cm     == elcano::NaN
+	|| instructions.bearing_deg == elcano::NaN) return false;
   // If none of the data was corrupted then we can store it in the TargetLocation struct provided.
   currentTargetLocation->targetSpeed = instructions.speed_cmPs;
-  currentTargetLocation->bearing = instructions.bearing_deg;
-  currentTargetLocation->eastPos = instructions.posE_cm;
-  currentTargetLocation->northPos = instructions.posN_cm;
+  currentTargetLocation->bearing     = instructions.bearing_deg;
+  currentTargetLocation->eastPos     = instructions.posE_cm;
+  currentTargetLocation->northPos    = instructions.posN_cm;
   return true;
-}
-
-bool ReadWaypoints(TargetLocation* TargetLocationArray)
-{
-  //set up variables
-  int count = 0;
-  SerialData dataRead;
-  TargetLocation currentTargetLocation;
-  // loop until we hit the end of the data
-   while(true)
-   {
-    //check if we're done receiveing
-    readSerial(&Serial1,&dataRead);
-    // bad number there is no more data or end of data
-    if(dataRead.number >= 789 || count >= MAX_WAYPOINTS)
-    {
-      if(count == 0) // nothing was read
-      {
-        return false;
-      }
-      break;
-    }
-    else
-    //process and store if valid. 
-    {
-      if(ProcessTargetLocation(&currentTargetLocation, dataRead))
-      {
-        TargetLocationArray[count] = currentTargetLocation;
-        count++;
-      }
-      // send back acknowledgement
-    }
-   }
-   return true;
 }
 
 //this will be the square test of the first autonomous baby step.
@@ -460,13 +417,19 @@ float ArcLength(Cubic x, Cubic y, float t,float deltaT, float current)
 
 //----------------------End Hermite Cubic Functions---------------------------//
 
+TargetLocation allTargetLocations[MAX_WAYPOINTS];
+int allTargetLocationsCount = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 void setup() 
 {  
         Serial1.begin(9600); 
-        //Serial2.begin(9600);
+        Serial2.begin(9600);
         //Serial3.begin(9600); 
-        pinMode(8,OUTPUT);
+        //pinMode(8,OUTPUT);
+		
+		ps.dt  = &dt;
+		ps.dev = &Serial1;
 }
 
 void loop() 
@@ -475,17 +438,28 @@ void loop()
     int speedSetting = 300;
     // get newest map data from C4 planner
     // Using Elcano_Serial.h Using the SerialData struct in the .h file.
-    // Receive a TargetLocation from C4. C4 will only ever send TargetLocations to C3.
+    // Receive a TargetLocation from C4.
 
-
+	elcano::ParseStateError err = ps.update();
+	if (err == elcano::ParseStateError::success) {
+		if (dt.kind == elcano::MsgType::sensor) {
+			/* C5 Input; TODO */
+		} else (dt.kind == elcano::MsgType::seg) {
+			/* C4 Input */
+			ProcessTargetLocation(allTargetLocations + allTargetLocationsCount, dt);
+			++allTargetLocationsCount;
+		} else {
+			dt.write(&Serial2);
+		}
+	}
+	
     //-----------------------C4 input--------------------------//
-    SerialData instructions;
+    /*SerialData instructions;
     readSerial(&Serial1, &instructions);
     TargetLocation currentTargetLocation;
     ProcessTargetLocation(&currentTargetLocation,instructions);
     TargetLocation allTargetLocations[MAX_WAYPOINTS];
-    ReadWaypoints(allTargetLocations);
-    
+    ReadWaypoints(allTargetLocations);*/
 
     //Test of input from C4.
     //Serial.println("test");

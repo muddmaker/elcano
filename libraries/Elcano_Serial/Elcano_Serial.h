@@ -18,15 +18,39 @@ const int32_t NaN = 0x7FFFFFFF;
 enum class MsgType : int8_t {
 	none   = 0, //!< Empty type
 	drive  = 1, //!< Drive to a position
+	/* speed_cmPs
+	** angle_deg
+	*/
+
 	sensor = 2, //!< Info from the sensor
+	/* speed_cmPs
+	** angle_deg
+	** posE_cm
+	** posN_cm
+	** bearing_deg
+	*/
+
 	goal   = 3, //!< Position of a goal
+	/* number
+	** posE_cm
+	** posN_cm
+	** bearing_deg
+	** probability (optional)
+	*/
+
 	seg    = 4  //!< Part of the navigation path
+	/* number
+	** posE_cm
+	** posN_cm
+	** bearing_deg
+	** speed_cmPs
+	*/
 };
 
 //! Contains information to send/recieve over a serial connection.
 struct SerialData {
-	MsgType kind;        //!< The type of message being received [0-4]
-	int32_t number;      //!< The cone number
+	MsgType kind;   //!< The type of message being received [0-4]
+	int32_t number; //!< The number of the unit
 	int32_t speed_cmPs;  //!< The speed the bike is moving at (cm/s)
 	int32_t angle_deg;   //!< Angle (deg) of the bike
 	int32_t bearing_deg; //!< Bearing (deg) of the camera

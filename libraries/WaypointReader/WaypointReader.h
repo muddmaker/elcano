@@ -72,6 +72,9 @@ struct JunctionReader {
 	1,3 Bad floating number (-?[0-9]+(.[0-9]+)?)
 	5   Bad file name       ([0-9a-zA-Z._-]+)
 	6   Bad end-of-line (\r \n? / \n)
+	
+	If you want to be a normie, call `dump_error_string` to automatically deal with
+	this garbage.
 	*/
 	int initialize(const char *, const Waypoint &);
 	
